@@ -1,26 +1,32 @@
 package jm.task.core.jdbc;
 
-import jm.task.core.jdbc.dao.UserDaoJDBCImpl;
-import jm.task.core.jdbc.util.Util;
+import jm.task.core.jdbc.dao.UserDaoHibernateImpl;
 
-import java.sql.SQLException;
+import static jm.task.core.jdbc.util.Util.closeSessionFactory;
 
 public class Main {
-    public static void main(String[] args) throws SQLException {
+
+    public static void main(String[] args) {
 
         try {
-            UserDaoJDBCImpl userDaoJDBC = UserDaoJDBCImpl.getInstance();
-            userDaoJDBC.createUsersTable();
-            userDaoJDBC.saveUser("Ivan", "Ivanov", (byte) 20);
-            userDaoJDBC.saveUser("Petr", "Petrov", (byte) 25);
-            userDaoJDBC.saveUser("Sidor", "Sidorov", (byte) 30);
-            userDaoJDBC.saveUser("Foma", "Fomin", (byte) 35);
-            userDaoJDBC.removeUserById(3);
-            System.out.println(userDaoJDBC.getAllUsers());
-            userDaoJDBC.cleanUsersTable();
-            userDaoJDBC.dropUsersTable();
+            UserDaoHibernateImpl userDao = UserDaoHibernateImpl.getInstance();
+            userDao.createUsersTable();
+
+            userDao.saveUser("Ivan", "Ivanov", (byte) 20);
+            userDao.saveUser("Petr", "Petrov", (byte) 25);
+            userDao.saveUser("Sidor", "Sidorov", (byte) 30);
+            userDao.saveUser("Foma", "Fomin", (byte) 35);
+
+            userDao.removeUserById(3);
+
+            System.out.println(userDao.getUser(1));
+
+            System.out.println(userDao.getAllUsers());
+
+            userDao.cleanUsersTable();
+            userDao.dropUsersTable();
         } finally {
-            Util.closePool();
+            closeSessionFactory();
         }
     }
 }
