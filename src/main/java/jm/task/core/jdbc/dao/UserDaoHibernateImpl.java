@@ -4,6 +4,7 @@ import jm.task.core.jdbc.model.User;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 import java.util.List;
 
@@ -37,6 +38,10 @@ public class UserDaoHibernateImpl implements UserDao {
 
     private static final String CLEAN_ALL_USER_HQL = """
             DELETE FROM User
+            """;
+
+    private static final String USER_BY_ID_HQL = """
+            SELECT id FROM User WHERE id = :id
             """;
 
     private UserDaoHibernateImpl() {
@@ -90,16 +95,18 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void removeUserById(long id) {
-        try (Session session = sessionFactory.openSession()) {
-            transaction = session.beginTransaction();
-            user.setId(id);
-            session.delete(user);
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
+        if (isUserExists(id)) {
+            try (Session session = sessionFactory.openSession()) {
+                transaction = session.beginTransaction();
+                user.setId(id);
+                session.delete(user);
+                session.getTransaction().commit();
+            } catch (Exception e) {
+                if (transaction != null) {
+                    transaction.rollback();
+                }
+                throw e;
             }
-            throw e;
         }
     }
 
@@ -114,7 +121,8 @@ public class UserDaoHibernateImpl implements UserDao {
 
     public User getUser(long id) {
         try (Session session = sessionFactory.openSession()) {
-            return session.get(User.class, id);
+            User resultUser = session.get(User.class, id);
+            return resultUser != null ? resultUser : new User("0", "0", (byte) 0);
         } catch (Exception e) {
             throw new RuntimeException();
         }
@@ -129,6 +137,16 @@ public class UserDaoHibernateImpl implements UserDao {
         } catch (Exception e) {
             transaction.rollback();
             throw e;
+        }
+    }
+
+    private boolean isUserExists(long id) {
+        try (Session session = sessionFactory.openSession()) {
+            Query query = session.createQuery(USER_BY_ID_HQL);
+            query.setParameter("id", id);
+            return query.uniqueResultOptional().isPresent();
+        } catch (Exception e) {
+            throw new RuntimeException();
         }
     }
 }

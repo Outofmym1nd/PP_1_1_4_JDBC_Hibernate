@@ -19,7 +19,7 @@ public class Main {
 
             userDao.removeUserById(3);
 
-            System.out.println(userDao.getUser(1));
+            System.out.println(userDao.getUser(3));
 
             System.out.println(userDao.getAllUsers());
 
